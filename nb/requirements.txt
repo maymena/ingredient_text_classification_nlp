@@ -1,0 +1,9 @@
+ipywidgets==8.1.2
+scikit-learn==1.6.1
+matplotlib==3.10.1
+opensearch-py==2.8.0
+python-decouple==3.8
+requests==2.32.3
+pandas==2.2.3
+pyarrow==19.0.1
+scikit-learn==1.6.1
