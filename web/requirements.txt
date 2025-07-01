@@ -1,3 +1,7 @@
+numpy==1.26.4
+scipy==1.11.4
+
+
 Flask[async]==3.0.2
 opensearch-py==2.8.0
 python-decouple==3.8
@@ -5,3 +9,17 @@ requests==2.32.3
 pandas==2.2.3
 pyarrow==19.0.1
 tqdm
+
+inflect==7.5.0
+ingredient-parser-nlp==2.1.1
+nltk==3.9.1
+openfoodfacts==2.6.1
+pyspark==4.0.0
+
+sentence-transformers==2.7.0
+faiss-cpu==1.8.0
+transformers==4.41.2
+torch==2.3.0
+gensim==4.3.2
+rapidfuzz==3.13.0
+

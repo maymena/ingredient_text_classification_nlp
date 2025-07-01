@@ -179,3 +179,7 @@ web/data/*.ipynb
 tmp.py
 internal/*
 .indexed
+
+# Ignore all parquet files everywhere:
+*.parquet
+full_open_food_fact_cleaned_parsed_embedded.parquet

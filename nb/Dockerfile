@@ -8,7 +8,12 @@ RUN apt-get clean && \
     apt-get install -y \
     build-essential \
     curl \
+    openjdk-17-jre-headless \
     && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for Spark
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 # Create directory as root and set proper ownership
 RUN mkdir -p /usr/src/data && \
