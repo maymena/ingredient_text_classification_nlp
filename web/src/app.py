@@ -92,9 +92,14 @@ def search_by_ingredients():
     if not ingredient:
         return jsonify({'error': 'Please provide an ingredient name'}), 400
 
-    ingredient_ids = [int(id_) for id_ in ingredient.split() if id_.isdigit()]
-    ingredient_ids = [ingredients[id_] for id_ in ingredient_ids]
-    ingredient = " ".join(ingredient_ids)
+    try:
+        ingredient_ids = [int(id_) for id_ in ingredient.split() if id_.isdigit()]
+        ingredient_ids = [ingredients[id_] for id_ in ingredient_ids]
+        ingredient = " ".join(ingredient_ids)
+    except Exception as e:
+        logger.error("🚨 Error parsing ingredient IDs: %s", e)
+        traceback.print_exc()
+        return jsonify({'error': 'Invalid ingredient ID(s)'}), 400
 
     # Create the search query
     query = {

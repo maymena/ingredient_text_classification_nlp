@@ -27,8 +27,10 @@ except LookupError:
     import nltk
     nltk.download('wordnet')
 
+import contextlib
+
 # === CONSTANTS ===
-THRESHOLD = 0.009
+THRESHOLD = 0.1
 DATA_PATH = os.path.abspath(os.path.join(os.getcwd(), 'full_open_food_fact_cleaned_parsed_embedded.parquet'))
 p = inflect.engine()
 
@@ -87,7 +89,19 @@ def is_plant_based_wordnet(phrase: str, i: int) -> bool:
 
 # === CLASSIFIERS ===
 def is_ingredient_keto(ingredient: str) -> bool:
-    ingredient_str = singularize(ingredient)
+
+    try:
+        parsed=parse_ingredient(ingredient, separate_names=True) # separate_names=False, foundation_foods=True
+        name_texts = [n.text for n in parsed.name]
+    except Exception as e:
+        name_texts = ingredient
+    
+    if isinstance(name_texts, list):
+        ing = ' '.join(name_texts)
+    else:
+        ing = name_texts
+    
+    ingredient_str = singularize(ing)
     ing_vec = minilm_model.encode([ingredient_str])[0]
 
     dot_products = np.dot(product_embeddings, ing_vec)
@@ -101,7 +115,19 @@ def is_ingredient_keto(ingredient: str) -> bool:
     return carbs is not None and best_sim >= THRESHOLD and carbs <= 10
 
 def is_ingredient_vegan(ingredient: str) -> bool:
-    ingredient_str = singularize(ingredient)
+
+    try:
+        parsed=parse_ingredient(ingredient, separate_names=True) # separate_names=False, foundation_foods=True
+        name_texts = [n.text for n in parsed.name]
+    except Exception as e:
+        name_texts = ingredient
+    
+    if isinstance(name_texts, list):
+        ing = ' '.join(name_texts)
+    else:
+        ing = name_texts
+    
+    ingredient_str = singularize(ing)
     non_vegan_set = set((v.replace('-', ' ')).lower() for v in non_vegan_ingredients)
 
     if ingredient_str in non_vegan_set:
@@ -122,6 +148,7 @@ def is_vegan(ingredients: List[str]) -> bool:
 # === MAIN for local testing ===
 def main(args):
     ground_truth = pd.read_csv(args.ground_truth, index_col=None)
+    ground_truth.to_csv('ground_truth_saved.csv', index=False)
     try:
         start_time = time()
         ground_truth['keto_pred'] = ground_truth['ingredients'].apply(
@@ -142,6 +169,7 @@ def main(args):
     print("=== Vegan ===")
     print(classification_report(ground_truth['vegan'], ground_truth['vegan_pred']))
     print(f"== Time taken: {end_time - start_time:.2f} seconds ==")
+    
     return 0
 
 # === Notebook usage ===

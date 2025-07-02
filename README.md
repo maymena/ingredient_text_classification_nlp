@@ -1,75 +1,75 @@
-# 🥑 Search By Ingredients Challenge
-![Argmax](https://argmaxml.com/wp-content/uploads/2024/04/Argmax_logo_inline.svg)
+# My Solution to the Search by Ingredients Challenge
 
-🗓 Submission Deadline: June 30th, 2025
-
-
-🎥 Please watch [this explainer video](https://youtu.be/rfdaZXseRro) to understand the task.
-
-## 👋 Who Is This Repo For?
-
-[Argmax](https://www.argmaxml.com) is hiring Junior Data scientists in Israel (TLV) and the United States (NYC area).
-This repo is meant to be a the first step in the process and it will set the stage for the interview.
-
-The data is taken from a real-life scenario, and it reflects the type of work you will do at Argmax.
+![image](https://github.com/user-attachments/assets/42073ccf-9f8a-4fe1-8e8c-41f6fb51b868)
 
 
-## 💼 About the Position
+- Each ingredient string is stripped of whitespace, lowercased, and hyphens are replaced with spaces then parsed with "ingredient_parser" package.
+- Each of the remaining words is singularized using the "inflect" package.
 
-Argmax is a boutique consulting firm specializing in personalized search and recommendation systems. We work with medium to large-scale clients across retail, advertising, healthcare, and finance.
+## 🥦 Vegan/non-vegan ingredient text classification
 
-We use tools like large language models, vector databases, and behavioral data to build personalization systems that actually deliver results.
+- Each word in the ingredient phrase is checked against a comprehensive non-vegan list (extracted from https://github.com/hmontazeri/is-vegan/blob/master/src/i18n/en/canbevegan.json ; I further expanded this list with ChatGPT suggestions and specific food groups I requested).
+- If a non-vegan word is found, the surrounding context (word before or after) is checked for plant-based origin:
+  - NLTK’s WordNet is used to check for synonyms, hypernyms (is-a), and hyponyms (type-of) of plant-based categories for the word before the non-vegan word.
+  - If the context confirms plant-based origin, the ingredient is considered vegan despite the non-vegan word match (e.g., "almond" in "almond milk").
+  - Special vegan keywords and substitute indicators are checked, such as "vegan", "non-dairy", "plant based", "tofu", "seitan", "beyond", "impossible", "not", "no", "free", "alternative", and "substitute".
+- If all checks pass, the ingredient is considered vegan; otherwise, it is labeled non-vegan.
+  
+### Suggestion for improving generalization even more:
+- Testing whether the nisuga/food_type_classification_model would improve the results.
+  - This model was trained using a dataset from USDA FoodData Central which contains the ANIMAL_BASED and PLANT_BASED classification labels based on the available protein type in a food product
 
-We're looking for candidates who are:
+## 🥑 Keto/non-keto ingredient text classification
 
--	✅ Proficient in Python
--	🔍 Naturally curious
--	🧠 Able to perform independent research
+- I downloaded data from Open Food Facts https://world.openfoodfacts.org/data containing ~ 3.8 million product names and carbohydrate values.
+    - Preprocessed the data: cleaned, parsed, singularized, deduplicated (reduced it to ~800000 entries)
+    - Tokenized and embedded product names using the pre-trained "all-MiniLM-L6-v2" sentence transformer.
+    - My preprocessed and embedded file can be downloaded: https://drive.google.com/file/d/1b289yPBgO30k8x1j5KoVH8l2D1MZ3LAD/view?usp=sharing. Size: 1.63GB. This file is required for the code to run.  
+- The `is_ingredient_keto` function embeds each ingredient and computes cosine similarity between the ingredient's embedding and all product embeddings from the Open Food Facts dataset.
+- The function identifies the product with the highest cosine similarity score.
+- The carbohydrate value for the most similar product is retrieved.
+- If the carbohydrate value is above 10g/100g, the ingredient is not keto.
+- If the best match similarity is below a set threshold (a configurable parameter), the ingredient is not keto.
 
-This challenge is designed to simulate the type of problems you'll tackle with us, and it applies to positions in both our:
--	🇮🇱 Ramat Gan, Israel office
--	🇺🇸 North Bergen County, New Jersey office
+### Suggestions for improving generalization even more:
+  - Using a larger sentence transformer model like "all-mpnet-base-v2" or "bge-large-en-v1.5" which are slower but more accurate than "all-MiniLM-L6-v2".
+  - Fine tuning the "all-MiniLM-L6-v2" model
 
-## 🎥 Past Project Talks
+## I achieved 99% accuracy on the vegan task and 70% on the keto task, the latter was affected by ground truth label inconsistencies.
 
-1. [Uri's talk on Persona based evaluation with large language models](https://www.youtube.com/watch?v=44--JTG0aMg)
-1. [Benjamin Kempinski on offline metrics](https://www.youtube.com/watch?v=5OPa2RYL5VI)
-1. [Daniel Hen & Uri Goren on pricing with contextual bandits](https://www.youtube.com/watch?v=IJtNBbINKbI)
-1. [Eitan Zimmerman's talk on visual feed reranking](https://www.youtube.com/watch?v=q4uF8nF5SWk)
+![image](https://github.com/user-attachments/assets/55c20d0a-ef7f-4f53-8084-2057b899f8c3)
 
-## 🚀 Getting Started
 
-### 🛠️ Setup
+### 📁 Data Preprocessing, Embeddings, and Prediction Error Analysis (including inspection of **ground truth keto label inconsistencies**)
 
-1.	Make sure Docker is installed on your machine.
-1.	Run the following in your terminal:  `docker compose build` and  `docker compose up -d`
-1. Open your browser and go to [localhost:8888](http://localhost:8888)
-1. Follow the instructions in the [task.ipynb](https://github.com/argmaxml/search_by_ingredients/blob/master/nb/src/task.ipynb) notebook
+**Files in `nb/src/preprocess_error_analysis_and_interim_data`:**
+- **keto_error_analysis.ipynb**
+  - Analyzes keto prediction errors.
+  - Identifies label incorrectness in the ground truth keto dataset.
+  - Identifies additional sources of misclassification
+    - Fixes some carbohydrate values since the Open Food Facts database is open source that users can contaminate with incorrect data.
+      - This was addressed by calculating the median carbohydrate value for duplicate product names.  
+- **preprocess_open_food_facts.py**
+  - cleans, parses, and singularizes, product names in the Open Food Facts dataset.
+  - Removes duplicate product names and prepares data for embedding.
+- **embed_food.ipynb**
+  - Embeds product names from the Open Food Facts database using a sentence transformer model.
+  - Produces the dataset used for ingredient matching.
 
-### 📬 Submission Instructions
+### Requirements to run the code: 
+Before running the code:
+  - **Preprocessed Data File:**  
+   Download the preprocessed file containing `product_name`, embeddings, and carbohydrate values (size: 1.63GB).  
+   Save the file in the `src` folders.  
+   > 📦 [Download link (Google Drive)](https://drive.google.com/file/d/1b289yPBgO30k8x1j5KoVH8l2D1MZ3LAD/view?usp=sharing))
 
-1. **Clone** this repository into a **private GitHub repo** under your own account.
-1. **Invite** [argmax2025](https://github.com/argmax2025) as a collaborator.
-1. **Implement** the missing parts in the codebase.
-1. Once done, fill in the application form:
-1.1. [US Application Form](https://forms.clickup.com/25655193/f/rexwt-1832/L0YE9OKG2FQIC3AYRR) 
-1.1 [IL Application Form](https://forms.clickup.com/25655193/f/rexwt-1812/IP26WXR9X4P6I4LGQ6)
-1. We'll reach out to you after reviewing your submission.
+  - **Windows Users – Set Docker Memory via `.wslconfig` (minimum 11GB):**  
+   If you are using Windows, ensure your Docker (WSL2) VM has enough memory.  
+   Check or create the file:
+   > C:\Users\<username>\.wslconfig
+   Add or update the following content:
+   ```ini
+    [wsl2]
+    memory=11GB
 
-## 🧪 The Interview Process
-### 🧑‍💻 Hands-On Technical Interview (July 2025)
-
-1.	A 3-hour live coding session focused on your submitted solution.
-1.	You'll be asked to extend, modify, and explain parts of the codebase.
-1.	Please ensure you're in a quiet space with a workstation capable of running your solution.
-
-### 🏢 On-Site Interview (August-September 2025)
-
-1. A non-technical, in-person meeting at our offices in Ramat Gan or New Jersey.
-1. We’ll get to know you and discuss your goals.
-1. Successful candidates will receive offers around late August or early September.
-
-## ❓ Still Have Questions?
-
-Feel free to mail us at [challenge25@argmaxml.com](mailto:challenge25@argmaxml.com)
 

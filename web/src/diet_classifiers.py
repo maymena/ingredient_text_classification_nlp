@@ -3,7 +3,12 @@ import numpy as np
 import pandas as pd
 import inflect
 from sentence_transformers import SentenceTransformer
-from nltk.corpus import wordnet as wn
+import nltk
+try:
+    from nltk.corpus import wordnet as wn
+    wn.synsets('test')
+except LookupError:
+    nltk.download('wordnet')
 from ingredient_parser import parse_ingredient
 from diet_constants import non_vegan_ingredients
 
@@ -19,8 +24,7 @@ except ImportError:
     # sklearn is optional
     def classification_report(y, y_pred):
         print("sklearn is not installed, skipping classification report")
-
-
+import traceback
 
 # === GLOBAL SETUP ===
 THRESHOLD = 0.009
@@ -79,34 +83,67 @@ def is_plant_based_wordnet(phrase: str, i: int) -> bool:
 
 # === MAIN FLASK-FACING FUNCTIONS ===
 def is_ingredient_keto(ingredient: str) -> bool:
-    print("@@@@@ print @@@@@@@@")
-    ingredient_str = singularize(ingredient)
-    ing_vec = minilm_model.encode([ingredient_str])[0]
+    try:
 
-    dot_products = np.dot(product_embeddings, ing_vec)
-    norms = np.linalg.norm(product_embeddings, axis=1) * np.linalg.norm(ing_vec)
-    similarities = dot_products / (norms + 1e-8)
-
-    best_idx = np.argmax(similarities)
-    best_sim = similarities[best_idx]
-    carbs = carb_values[best_idx]
-
-    if carbs is None or best_sim < THRESHOLD or carbs > 10:
+        try:
+            parsed=parse_ingredient(ingredient, separate_names=True) # separate_names=False, foundation_foods=True
+            name_texts = [n.text for n in parsed.name]
+        except Exception as e:
+            name_texts = ingredient
+    
+        if isinstance(name_texts, list):
+            ing = ' '.join(name_texts)
+        else:
+            ing = name_texts
+        
+        ingredient_str = singularize(ing)
+        ing_vec = minilm_model.encode([ingredient_str])[0]
+    
+        dot_products = np.dot(product_embeddings, ing_vec)
+        norms = np.linalg.norm(product_embeddings, axis=1) * np.linalg.norm(ing_vec)
+        similarities = dot_products / (norms + 1e-8)
+    
+        best_idx = np.argmax(similarities)
+        best_sim = similarities[best_idx]
+        carbs = carb_values[best_idx]
+    
+        if carbs is None or best_sim < THRESHOLD or carbs > 10:
+            return False
+        return True
+    except Exception as e:
+        print("🚨 Exception in is_ingredient_keto:", e)
+        traceback.print_exc()
         return False
-    return True
 
 def is_ingredient_vegan(ingredient: str) -> bool:
-    ingredient_str = singularize(ingredient)
-    non_vegan_set = set((v.replace('-', ' ')).lower() for v in non_vegan_ingredients)
+    try:
 
-    if ingredient_str in non_vegan_set:
+        try:
+            parsed=parse_ingredient(ingredient, separate_names=True) # separate_names=False, foundation_foods=True
+            name_texts = [n.text for n in parsed.name]
+        except Exception as e:
+            name_texts = ingredient
+    
+        if isinstance(name_texts, list):
+            ing = ' '.join(name_texts)
+        else:
+            ing = name_texts
+        
+        ingredient_str = singularize(ing)
+        non_vegan_set = set((v.replace('-', ' ')).lower() for v in non_vegan_ingredients)
+    
+        if ingredient_str in non_vegan_set:
+            return False
+    
+        ingredient_words = ingredient_str.split()
+        for i, word in enumerate(ingredient_words):
+            if word in non_vegan_set:
+                return is_plant_based_wordnet(ingredient_str, i)
+        return True
+    except Exception as e:
+        print("🚨 Exception in is_ingredient_vegan:", e)
+        traceback.print_exc()
         return False
-
-    ingredient_words = ingredient_str.split()
-    for i, word in enumerate(ingredient_words):
-        if word in non_vegan_set:
-            return is_plant_based_wordnet(ingredient_str, i)
-    return True
 
 
 def is_keto(ingredients: List[str]) -> bool:
@@ -115,3 +152,4 @@ def is_keto(ingredients: List[str]) -> bool:
 
 def is_vegan(ingredients: List[str]) -> bool:
     return all(map(is_ingredient_vegan, ingredients))
+
