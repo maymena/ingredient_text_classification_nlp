@@ -31,11 +31,17 @@
 - If the carbohydrate value is above 10g/100g, the ingredient is not keto.
 - If the best match similarity is below a set threshold (a configurable parameter), the ingredient is not keto.
 
-### Suggestions for improving generalization even more:
-  - Using a larger sentence transformer model like "all-mpnet-base-v2" or "bge-large-en-v1.5" which are slower but more accurate than "all-MiniLM-L6-v2".
-  - Fine tuning the "all-MiniLM-L6-v2" model
+### Suggestions for further improvements: 
+**To improve carbohydrate data and classification speed (dataset improvement):**
+- Using CORGIS dataset instead of data from Open Food Facts (https://corgis-edu.github.io/corgis/csv/food/?utm_source=chatgpt.com)
+  - Open Food Facts contained ~4M products and after my preprocessing ~800K products. Performing similarity search across 800K product embeddings can be computationally intensive for real-time applications. In contrast, CORGIS has "only" 70K products so it may enable faster similarity matching.While this may reduce coverage, it likely retains the most commonly used products.
+  - Open Food Facts may contain inaccurate carbohydrate values, as the data is user-contributed.. In contrast, CORGIS is a curated dataset with vetted information.
 
-## I achieved 99% accuracy on the vegan task and 70% on the keto task, the latter was affected by ground truth label inconsistencies.
+**To improve ingredient matching (model improvement):**
+- Using a larger sentence transformer model like "all-mpnet-base-v2" or "bge-large-en-v1.5" which are slower but more accurate than "all-MiniLM-L6-v2". A smaller model was initially used to reduce inference time in the deployed application.
+- Fine-tuning the selected transformer model on a food-domain dataset may improve ingredient matching accuracy.
+
+## I achieved 99% accuracy on the vegan task and 70% on the keto task, the latter was affected by ground truth keto label incorrectness.
 
 ![image](https://github.com/user-attachments/assets/55c20d0a-ef7f-4f53-8084-2057b899f8c3)
 
