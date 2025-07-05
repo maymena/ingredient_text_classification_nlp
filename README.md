@@ -27,21 +27,24 @@
     - Preprocessed the data: cleaned, parsed, singularized, deduplicated (reduced it to ~800000 entries)
     - Tokenized and embedded product names using the pre-trained "all-MiniLM-L6-v2" sentence transformer.
     - My preprocessed and embedded file can be downloaded: https://drive.google.com/file/d/1b289yPBgO30k8x1j5KoVH8l2D1MZ3LAD/view?usp=sharing. Size: 1.63GB. This file is required for the code to run.  
-- The `is_ingredient_keto` function embeds each ingredient and computes cosine similarity between the ingredient's embedding and all product embeddings from the Open Food Facts dataset.
-- The function identifies the product with the highest cosine similarity score.
-- The carbohydrate value for the most similar product is retrieved.
-- If the carbohydrate value is above 10g/100g, the ingredient is not keto.
-- If the best match similarity is below a set threshold (a configurable parameter), the ingredient is not keto.
+- The `is_ingredient_keto` function encodes each ingredient and uses FAISS with IndexHNSWFlat for Approximate Nearest Neighbor (ANN) search, replacing brute-force cosine similarity.
+- I initially used brute-force cosine similarity, but I replaced it with ANN search since it accelerated ingredient–product matching by ~5× with with marginal effect on recall and precision.
+- Once the nearest product embedding is identified, the corresponding carbohydrate value is retrieved.
+- An ingredient is classified as non-keto if its matched product has a carbohydrate value above 10g (per 100g of the matched product) or similarity is below a configurable threshold.
 
-### Suggestions for further improvements: 
+### Suggestions for further improvements:
 **To improve carbohydrate data and classification speed (dataset improvement):**
-- Using CORGIS dataset instead of data from Open Food Facts (https://corgis-edu.github.io/corgis/csv/food/?utm_source=chatgpt.com)
+- Using CORGIS dataset instead of data from Open Food Facts (https://corgis-edu.github.io/corgis/csv/food/?utm_source=chatgpt.com).
   - Open Food Facts contained ~4M products and after my preprocessing ~800K products. Performing similarity search across 800K product embeddings can be computationally intensive for real-time applications. In contrast, CORGIS has "only" 70K products so it may enable faster similarity matching.While this may reduce coverage, it likely retains the most commonly used products.
   - Open Food Facts may contain inaccurate carbohydrate values, as the data is user-contributed.. In contrast, CORGIS is a curated dataset with vetted information.
 
-**To improve ingredient matching (model improvement):**
-- Using a larger sentence transformer model like "all-mpnet-base-v2" or "bge-large-en-v1.5" which are slower but more accurate than "all-MiniLM-L6-v2". A smaller model was initially used to reduce inference time in the deployed application.
-- Fine-tuning the selected transformer model on a food-domain dataset may improve ingredient matching accuracy.
+**To improve ingredient matching (accuracy- speed-memory tradeoff):**
+- Search index improvements:
+  - Tunning IndexHNSWFlat Hyperparameters (`efSearch`, `efConstruction`, `M`).
+  - Experimenting with Different FAISS Index Structures (e.g., `IndexIVFFlat`, `IndexIVFPQ`).
+- Embedding model improvements:
+  - Using a larger sentence transformer model like `"all-mpnet-base-v2"` or `"bge-large-en-v1.5"` which are slower but more accurate than `"all-MiniLM-L6-v2"`. A smaller model was initially used to reduce inference time in the deployed application.
+  - Fine-tuning the selected transformer model on a food-domain dataset may improve ingredient matching accuracy.
 
 ## I achieved 99% accuracy on the vegan task and 70% on the keto task, the latter was affected by ground truth keto label incorrectness.
 
