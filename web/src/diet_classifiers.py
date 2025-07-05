@@ -47,7 +47,13 @@ minilm_model = SentenceTransformer("all-MiniLM-L6-v2")
 if product_embeddings.dtype != np.float32:
     product_embeddings = product_embeddings.astype(np.float32)
 faiss.normalize_L2(product_embeddings)
-index = faiss.IndexFlatIP(product_embeddings.shape[1])
+
+# IndexHNSWFlat (Hierarchical Navigable Small World graph)
+d = product_embeddings.shape[1]
+M = 32  # Number of neighbors in the graph; default is 32, higher = more accuracy
+
+index = faiss.IndexHNSWFlat(d, M)
+index.hnsw.efSearch = 55   # Size of dynamic candidate list during search (higher = more accurate, slower)
 index.add(product_embeddings)
 
 # === HELPERS ===
@@ -105,10 +111,9 @@ def is_ingredient_keto(ingredient: str) -> bool:
             ing = name_texts
         
         ingredient_str = singularize(ing)
-        ing_vec = minilm_model.encode([ingredient_str])[0]
-
-        ing_vec = ing_vec.astype(np.float32)
+        ing_vec = minilm_model.encode([ingredient_str])[0].astype(np.float32)
         faiss.normalize_L2(ing_vec.reshape(1, -1))
+        
         D, I = index.search(ing_vec.reshape(1, -1), 1)
         best_idx = I[0][0]
         best_sim = D[0][0]
