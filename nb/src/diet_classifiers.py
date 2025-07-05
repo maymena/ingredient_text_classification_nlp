@@ -49,6 +49,15 @@ from diet_constants import (
     non_vegan_categories
 )
 
+import faiss
+
+# Build the FAISS index for Approximate Nearest Neighbor (ANN) Search
+if product_embeddings.dtype != np.float32:
+    product_embeddings = product_embeddings.astype(np.float32)
+faiss.normalize_L2(product_embeddings)
+index = faiss.IndexFlatIP(product_embeddings.shape[1])
+index.add(product_embeddings)
+
 # === UTILS ===
 def singularize(text: str) -> str:
     words = text.lower().strip().replace('-', ' ').split()
@@ -103,13 +112,13 @@ def is_ingredient_keto(ingredient: str) -> bool:
     
     ingredient_str = singularize(ing)
     ing_vec = minilm_model.encode([ingredient_str])[0]
-
-    dot_products = np.dot(product_embeddings, ing_vec)
-    norms = np.linalg.norm(product_embeddings, axis=1) * np.linalg.norm(ing_vec)
-    similarities = dot_products / (norms + 1e-8)
-
-    best_idx = np.argmax(similarities)
-    best_sim = similarities[best_idx]
+    
+    ing_vec = ing_vec.astype(np.float32)
+    faiss.normalize_L2(ing_vec.reshape(1, -1))
+    D, I = index.search(ing_vec.reshape(1, -1), 1)
+    best_idx = I[0][0]
+    best_sim = D[0][0]
+    
     carbs = carb_values[best_idx]
 
     return carbs is not None and best_sim >= THRESHOLD and carbs <= 10

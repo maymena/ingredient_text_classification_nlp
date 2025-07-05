@@ -25,6 +25,7 @@ except ImportError:
     def classification_report(y, y_pred):
         print("sklearn is not installed, skipping classification report")
 import traceback
+import faiss
 
 # === GLOBAL SETUP ===
 THRESHOLD = 0.009
@@ -41,6 +42,13 @@ product_names = df_food["product_name"].to_numpy()
 
 # Load sentence embedding model once
 minilm_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Build the FAISS index for Approximate Nearest Neighbor (ANN) Search
+if product_embeddings.dtype != np.float32:
+    product_embeddings = product_embeddings.astype(np.float32)
+faiss.normalize_L2(product_embeddings)
+index = faiss.IndexFlatIP(product_embeddings.shape[1])
+index.add(product_embeddings)
 
 # === HELPERS ===
 def singularize(text: str) -> str:
@@ -98,13 +106,13 @@ def is_ingredient_keto(ingredient: str) -> bool:
         
         ingredient_str = singularize(ing)
         ing_vec = minilm_model.encode([ingredient_str])[0]
-    
-        dot_products = np.dot(product_embeddings, ing_vec)
-        norms = np.linalg.norm(product_embeddings, axis=1) * np.linalg.norm(ing_vec)
-        similarities = dot_products / (norms + 1e-8)
-    
-        best_idx = np.argmax(similarities)
-        best_sim = similarities[best_idx]
+
+        ing_vec = ing_vec.astype(np.float32)
+        faiss.normalize_L2(ing_vec.reshape(1, -1))
+        D, I = index.search(ing_vec.reshape(1, -1), 1)
+        best_idx = I[0][0]
+        best_sim = D[0][0]
+        
         carbs = carb_values[best_idx]
     
         if carbs is None or best_sim < THRESHOLD or carbs > 10:
