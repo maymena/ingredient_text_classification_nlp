@@ -62,7 +62,7 @@ d = product_embeddings.shape[1]
 M = 32  # Number of neighbors in the graph; default is 32, higher = more accuracy
 
 index = faiss.IndexHNSWFlat(d, M)
-index.hnsw.efSearch = 55   # Size of dynamic candidate list during search (higher = more accurate, slower)
+index.hnsw.efSearch = 64   # Size of dynamic candidate list during search (higher = more accurate, slower)
 index.add(product_embeddings)
 
 # === UTILS ===
