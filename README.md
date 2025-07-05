@@ -1,4 +1,10 @@
-# My Solution to the Search by Ingredients Challenge
+<div align="center">
+
+### My Solution to the Search by Ingredients Challenge 
+### & 
+### Suggestions for Further Improvements
+
+</div>
 
 <p float="left">
   <img src="https://github.com/user-attachments/assets/42073ccf-9f8a-4fe1-8e8c-41f6fb51b868" width="500" />
