@@ -57,7 +57,7 @@
 ![image](https://github.com/user-attachments/assets/55c20d0a-ef7f-4f53-8084-2057b899f8c3)
 
 
-### 📁 Data Preprocessing, Embeddings, and Prediction Error Analysis (including inspection of **ground truth keto label inconsistencies**)
+## 📁 Data Preprocessing, Embeddings, and Prediction Error Analysis (including inspection of **ground truth keto label inconsistencies**)
 
 **Files in `nb/src/preprocess_error_analysis_and_interim_data`:**
 - **keto_error_analysis.ipynb**
@@ -73,7 +73,7 @@
   - Embeds product names from the Open Food Facts database using a sentence transformer model.
   - Produces the dataset used for ingredient matching.
 
-### Requirements to run the code: 
+## Requirements to run the code: 
 Before running the code:
   - **Preprocessed Data File:**  
    Download the preprocessed file containing `product_name`, embeddings, and carbohydrate values (size: 1.63GB).  
