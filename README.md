@@ -7,7 +7,7 @@
 </div>
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/42073ccf-9f8a-4fe1-8e8c-41f6fb51b868" width="500" />
+  <img src="https://github.com/user-attachments/assets/42073ccf-9f8a-4fe1-8e8c-41f6fb51b868" width="490" />
   <img src="https://github.com/user-attachments/assets/d6e87ca4-c4f1-4fed-95df-24df71a4005f" width="475" />
 </p>
 
@@ -52,7 +52,7 @@
   - Using a larger sentence transformer model like `"all-mpnet-base-v2"` or `"bge-large-en-v1.5"` which are slower but more accurate than `"all-MiniLM-L6-v2"`. A smaller model was initially used to reduce inference time in the deployed application.
   - Fine-tuning the selected transformer model on a food-domain dataset may improve ingredient matching accuracy.
 
-## I achieved 99% accuracy on the vegan task and 70% on the keto task, the latter was affected by ground truth keto label incorrectness.
+## I achieved 99% accuracy on the vegan task and 70% on the keto task. The lower keto score was due to ground truth label inconsistencies, which I detailed in an email to challenge25@argmaxml.com.
 
 ![image](https://github.com/user-attachments/assets/55c20d0a-ef7f-4f53-8084-2057b899f8c3)
 
