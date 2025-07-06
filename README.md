@@ -7,8 +7,8 @@
 </div>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/42073ccf-9f8a-4fe1-8e8c-41f6fb51b868" width="460" />
-  <img src="https://github.com/user-attachments/assets/d6e87ca4-c4f1-4fed-95df-24df71a4005f" width="445" />
+  <img src="https://github.com/user-attachments/assets/42073ccf-9f8a-4fe1-8e8c-41f6fb51b868" width="420" />
+  <img src="https://github.com/user-attachments/assets/d6e87ca4-c4f1-4fed-95df-24df71a4005f" width="405" />
 </p>
 
 - Each ingredient string is stripped of whitespace, lowercased, and hyphens are replaced with spaces then parsed with "ingredient_parser" package.
