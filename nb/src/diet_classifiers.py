@@ -31,7 +31,8 @@ import contextlib
 
 # === CONSTANTS ===
 THRESHOLD = 0.1
-DATA_PATH = os.path.abspath(os.path.join(os.getcwd(), 'full_open_food_fact_cleaned_parsed_embedded.parquet'))
+# DATA_PATH = os.path.abspath(os.path.join(os.getcwd(), 'full_open_food_fact_cleaned_parsed_embedded.parquet'))
+DATA_PATH = "/app/shared_data/full_open_food_fact_cleaned_parsed_embedded.parquet"
 p = inflect.engine()
 
 # === GLOBALS ===

@@ -32,7 +32,8 @@ THRESHOLD = 0.009
 p = inflect.engine()
 
 # Updated to use the correct Docker-mounted path
-DATA_PATH = "/app/web/full_open_food_fact_cleaned_parsed_embedded.parquet"
+# DATA_PATH = "/app/web/full_open_food_fact_cleaned_parsed_embedded.parquet"
+DATA_PATH = "/app/shared_data/full_open_food_fact_cleaned_parsed_embedded.parquet"
 
 # Load food data
 df_food = pd.read_parquet(DATA_PATH, columns=["product_name", "carbohydrates_100g", "embedding"])

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import List, Dict
 from argparse import ArgumentParser
 from tqdm import tqdm
+from diet_classifiers import is_keto, is_vegan #added import
 
 # Configure logging
 logging.getLogger('opensearch').setLevel(logging.ERROR)
@@ -106,7 +107,9 @@ def create_index(client: OpenSearch):
                     "description": {"type": "text"},
                     "ingredients": {"type": "text"},
                     "instructions": {"type": "text"},
-                    "photo_url": {"type": "keyword"}
+                    "photo_url": {"type": "keyword"},
+                    "keto": {"type": "boolean"}, #added keto and vegan to recipes schema
+                    "vegan": {"type": "boolean"}
                 }
             }
         }
@@ -130,6 +133,9 @@ def batch_index_recipes(client: OpenSearch, recipes: List[Dict], batch_size: int
     actions = []
     ingredients = set()
     for recipe in recipes:
+        # Added precomputing of is_keo and is_vegan
+        recipe["keto"] = is_keto(recipe["ingredients"])
+        recipe["vegan"] = is_vegan(recipe["ingredients"])
         actions.append({"index": {"_index": "recipes"}})
         actions.append(recipe)
         ingredients |= {normalize_ingredient(

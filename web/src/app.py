@@ -129,8 +129,10 @@ def search_by_ingredients():
             'ingredients': hit['_source']['ingredients'],
             'instructions': hit['_source'].get('instructions', ''),
             'photo_url': hit['_source'].get('photo_url', ''),
-            'keto': is_keto(hit['_source']['ingredients']),
-            'vegan': is_vegan(hit['_source']['ingredients']),
+            'keto': hit['_source'].get('keto', False), #added the reading of the precomputed values
+            'vegan': hit['_source'].get('vegan', False),
+            #'keto': is_keto(hit['_source']['ingredients']),
+            #'vegan': is_vegan(hit['_source']['ingredients']),
             'score': hit['_score']
         } for hit in hits]
         return jsonify({
@@ -140,6 +142,62 @@ def search_by_ingredients():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# added
+@app.route('/search_by_diet', methods=['GET'])
+def search_by_diet():
+    diet = request.args.get('diet', '').strip()
+    if not diet:
+        return jsonify({'error': 'Please provide at least one diet'}), 400
+
+    diets = [d.strip().lower() for d in diet.split(',') if d.strip()]
+    if not diets:
+        return jsonify({'error': 'No valid diets provided'}), 400
+
+    # Build the filter for OpenSearch; assumes 'keto' and 'vegan' are boolean fields
+    must_filters = []
+    for d in diets:
+        if d in ('keto', 'vegan'):
+            must_filters.append({ "term": { d: True } })
+        else:
+            return jsonify({'error': f"Unsupported diet '{d}'"}), 400
+
+    # Construct the query: must match all selected diets (i.e., recipes that are BOTH keto AND vegan if both checked)
+    query = {
+        "query": {
+            "bool": {
+                "must": must_filters
+            }
+        }
+    }
+
+    try:
+        response = client.search(
+            index="recipes",
+            body=query,
+            size=12
+        )
+
+        hits = response['hits']['hits']
+        results = [{
+            'title': hit['_source']['title'],
+            'description': hit['_source'].get('description', ''),
+            'ingredients': hit['_source']['ingredients'],
+            'instructions': hit['_source'].get('instructions', ''),
+            'photo_url': hit['_source'].get('photo_url', ''),
+            'keto': hit['_source'].get('keto', False),
+            'vegan': hit['_source'].get('vegan', False),
+            'score': hit['_score']
+        } for hit in hits]
+
+        return jsonify({
+            'total': response['hits']['total']['value'],
+            'results': results
+        })
+    except Exception as e:
+        logger.error("Error in search_by_diet: %s", e)
+        return jsonify({'error': str(e)}), 500
+# end
 
 
 if __name__ == '__main__':

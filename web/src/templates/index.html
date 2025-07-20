@@ -29,6 +29,21 @@
 <body>
     <div class="container py-5">
         <h1 class="text-center mb-4">Recipe Search</h1>
+
+        <!-- === DIET SEARCH CHECKBOXES START === -->
+        <div class="row justify-content-center mb-4">
+          <div class="col-md-4">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="dietKeto" value="keto">
+              <label class="form-check-label" for="dietKeto">Keto</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="dietVegan" value="vegan">
+              <label class="form-check-label" for="dietVegan">Vegan</label>
+            </div>
+          </div>
+        </div>
+        <!-- === DIET SEARCH CHECKBOXES END === -->
         
         <!-- Search Bar -->
         <div class="row justify-content-center mb-4">
@@ -116,10 +131,39 @@
                 const selectedIngredients = $(this).val();
                 if (selectedIngredients && selectedIngredients.length > 0) {
                     searchRecipes(selectedIngredients);
+                    // === DIET SEARCH ADDITION START ===
+                    // Clear all diet checkboxes if user does ingredient search
+                    $('.form-check-input[type="checkbox"]').prop('checked', false);
+                    // === DIET SEARCH ADDITION END ===
                 } else {
                     $('#resultsContainer').empty();
                 }
             });
+
+            // === DIET SEARCH ADDITION START ===
+            // Handle search on diet selection (checkboxes)
+            $('.form-check-input[type="checkbox"]').on('change', function() {
+                // Get all checked diets
+                const selectedDiets = $('.form-check-input[type="checkbox"]:checked')
+                    .map(function() { return this.value; }).get();
+            
+                if (selectedDiets.length > 0) {
+                    // Clear ingredient selection if user switches to diet search
+                    $('#ingredientSearch').val(null).trigger('change');
+            
+                    // Example: send multiple diets as a comma-separated list or array
+                    $.get('/search_by_diet', { diet: selectedDiets.join(',') }) // or pass {diet: selectedDiets}
+                        .done(function(data) {
+                            displayResults(data.results);
+                        })
+                        .fail(function(error) {
+                            console.error('Diet search failed:', error);
+                        });
+                } else {
+                    $('#resultsContainer').empty();
+                }
+            });
+            // === DIET SEARCH ADDITION END ===
 
             // Initialize modal
             const recipeModal = new bootstrap.Modal(document.getElementById('recipeModal'));
