@@ -77,7 +77,7 @@
 Before running the code:
   - **Preprocessed Data File:**  
    Download the preprocessed file containing `product_name`, embeddings, and carbohydrate values (size: 1.63GB).  
-   Save the file in the `src` folders.  
+   Save the file in the `data` folder.  
    > 📦 [Download link (Google Drive)](https://drive.google.com/file/d/1b289yPBgO30k8x1j5KoVH8l2D1MZ3LAD/view?usp=sharing))
 
   - **Windows Users – Set Docker Memory via `.wslconfig` (minimum 11GB):**  
